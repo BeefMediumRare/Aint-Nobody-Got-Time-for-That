@@ -97,7 +97,14 @@
     // Alt+Shift+R toggles the session regardless of current state. The chord
     // keeps this always-live shortcut from firing while typing.
     if (e.code === 'KeyR' && e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey) {
-      if (recording) stopRecording(); else startRecording();
+      if (recording) {
+        stopRecording();
+        // Ended from the page: ask the background to open the popup so the save
+        // dialog is right there (its init shows it when cues are waiting).
+        if (browserApi && browserApi.runtime) browserApi.runtime.sendMessage({ type: 'sessionEnded' });
+      } else {
+        startRecording();
+      }
       e.preventDefault();
       e.stopPropagation();
       return;

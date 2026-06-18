@@ -57,6 +57,15 @@
         tabVideo[tabId] = msg.videoId || null;
         updateTrackBadge(tabId);
       }
+    } else if (msg.type === 'sessionEnded') {
+      // Pop the popup so the just-recorded track can be named and saved.
+      // No-op on Firefox < 118, which requires a user-gesture handler.
+      if (action.openPopup) {
+        try {
+          var opening = action.openPopup();
+          if (opening && opening.catch) opening.catch(function () {});
+        } catch (e) { /* needs a gesture on this version; user opens it manually */ }
+      }
     }
   });
 
