@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Ain't Nobody Got Time for That",
+  "version": "0.2.0",
+  "description": "Script YouTube playback speed against video timestamps.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "speed-script@local",
+      "strict_min_version": "115.0"
+    }
+  },
+  "permissions": ["activeTab"],
+  "action": {
+    "default_title": "Ain't Nobody Got Time for That",
+    "default_popup": "src/popup.html"
+  },
+  "background": {
+    "scripts": ["src/background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["src/parser.js", "src/content.js", "src/author.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
