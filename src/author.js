@@ -39,16 +39,28 @@
     browserApi.runtime.sendMessage({ type: 'badge', recording: recording, count: cues.length });
   }
 
+  function renderTicks() {
+    if (window.SpeedTrackTimeline) window.SpeedTrackTimeline.render(cues);
+  }
+
+  function clearTicks() {
+    if (window.SpeedTrackTimeline) window.SpeedTrackTimeline.clear();
+  }
+
   function startRecording() {
     recording = true;
     cues = [];
     window.__speedTrackRecording = true;
+    clearTicks();
+    if (window.SpeedTrackTimeline) window.SpeedTrackTimeline.pin();
     sendBadge();
   }
 
   function stopRecording() {
     recording = false;
     window.__speedTrackRecording = false;
+    clearTicks();
+    if (window.SpeedTrackTimeline) window.SpeedTrackTimeline.unpin();
     sendBadge();
     return currentTrack();
   }
@@ -62,6 +74,7 @@
     var video = getVideo();
     var t = cues.length === 0 ? 0 : (video ? video.currentTime : 0);
     SpeedTrack.mergeCue(cues, t, code, MERGE_WINDOW_SEC);
+    renderTicks();
     sendBadge();
   }
 
