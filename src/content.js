@@ -1,7 +1,7 @@
 // content.js — the playback engine.
 // Holds the active segments in memory and, on every animation frame, sets the
-// video's playbackRate to match the timeline. Receives segments from the popup
-// via runtime messaging.
+// video's playbackRate to match the timeline — except skip sections, which it
+// seeks straight past. Receives segments from the popup via runtime messaging.
 //
 // YouTube is an SPA: clicking a different video in the same tab doesn't reload
 // the content script. We watch for that and drop the previous video's track so
@@ -17,18 +17,39 @@
 
   var browserApi = (typeof browser !== 'undefined') ? browser : (typeof chrome !== 'undefined' ? chrome : null);
 
+  // Speed code that means "skip this stretch" rather than "play it at rate N".
+  // Kept in sync with parser.js / timeline.js (4 = skip).
+  var SKIP_CODE = 4;
+
   function getVideo() {
     return document.querySelector('video');
   }
 
-  // Rate active at time t: last segment whose start <= t, else null.
-  function rateAt(t) {
-    var rate = null;
+  // Index of the active segment at time t: last whose start <= t, else -1
+  // (before the first entry, where we leave playback untouched).
+  function activeIndexAt(t) {
+    var idx = -1;
     for (var i = 0; i < segments.length; i++) {
-      if (segments[i].start <= t) rate = segments[i].rate;
+      if (segments[i].start <= t) idx = i;
       else break;
     }
-    return rate;
+    return idx;
+  }
+
+  // A segment is a skip if its code says so. Older segments carry no code; for
+  // those we fall back to the rate the skip code maps to (see parser.SPEED_LEVELS).
+  function isSkip(seg) {
+    return seg.code != null ? seg.code === SKIP_CODE : seg.rate >= 10;
+  }
+
+  // Where a skip starting at segment i lands: the start of the next non-skip
+  // segment, or the video's end if the skip runs to the finish. Consecutive
+  // skip segments collapse into one jump.
+  function skipTarget(i, video) {
+    for (var j = i + 1; j < segments.length; j++) {
+      if (!isSkip(segments[j])) return segments[j].start;
+    }
+    return (video && isFinite(video.duration)) ? video.duration : segments[i].start;
   }
 
   function tick() {
@@ -36,10 +57,20 @@
     var video = getVideo();
     // Don't fight the recorder: leave playback (and its ticks) alone while authoring.
     if (video && segments.length && !window.__speedTrackRecording) {
-      var want = rateAt(video.currentTime);
-      // null => before the first entry: leave the rate untouched.
-      if (want !== null && Math.abs(video.playbackRate - want) > 1e-3) {
-        video.playbackRate = want;
+      // Only drive playback while it's actually playing: a pause is the user
+      // taking over, so leave the rate and playhead where they put them.
+      var i = video.paused ? -1 : activeIndexAt(video.currentTime);
+      if (i >= 0) {
+        var seg = segments[i];
+        if (isSkip(seg)) {
+          // Always jump to the end of the skip — re-checked every frame, so
+          // scrubbing back into a skip section bounces straight out again.
+          // !video.seeking keeps us from re-issuing the seek while it's in flight.
+          var target = skipTarget(i, video);
+          if (!video.seeking && target > video.currentTime + 0.01) video.currentTime = target;
+        } else if (Math.abs(video.playbackRate - seg.rate) > 1e-3) {
+          video.playbackRate = seg.rate;
+        }
       }
       // Keep the bands on the bar; cheap no-op unless YouTube re-rendered it.
       if (showSegments && window.SpeedTrackTimeline) window.SpeedTrackTimeline.refreshSegments(segments);

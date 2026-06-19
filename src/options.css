@@ -200,10 +200,6 @@ p.muted {
   font-family: var(--mono);
 }
 
-.speed-fixed {
-  font-family: var(--mono);
-}
-
 .speed-note {
   font-size: 12px;
   font-style: italic;

@@ -289,7 +289,8 @@
       setStatus('Speeds must be positive numbers.', 'error');
       return;
     }
-    // Preserve Skip (code 4) untouched — it has no input and becomes a real skip later.
+    // Skip (code 4) has no speed input — it seeks past the section. Carry its
+    // stored value through unchanged so the segment still resolves to a rate.
     var skip = (speedLevels && speedLevels['4'] != null) ? speedLevels['4'] : 10;
     var map = { '1': vals[0], '2': vals[1], '3': vals[2], '4': skip };
     SpeedTrackStore.setSpeedLevels(map).then(function () {

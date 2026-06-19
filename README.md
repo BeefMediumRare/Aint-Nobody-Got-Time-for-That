@@ -25,7 +25,7 @@ The toolbar icon carries a small badge with the number of tracks available for t
 
 Click the gear icon at the bottom of the popup. From there you can:
 
-- Set how fast each mode plays. A track stores a *mode* (normal, fast, faster, skip), not a fixed speed, so these are your speeds for every track. The defaults are 1x, 2x, 3x, and 10x.
+- Set how fast each mode plays. A track stores a *mode* (normal, fast, faster, skip), not a fixed speed, so these are your speeds for every track. The defaults are 1x, 2x, and 3x. Skip has no speed: it jumps straight to the end of the section.
 - Turn the colored speed segments on the progress bar on or off.
 
 ### Add a repository
@@ -43,7 +43,7 @@ Synced tracks are read-only and sit next to your own on any matching video. They
 You make a track by recording it while you watch, not by typing timestamps.
 
 1. Press **`Alt+Shift+R`** (or open the popup and hit **Start recording**). The badge turns red.
-2. As the video plays, press a digit to set the speed from that point on: **`1`** normal, **`2`** fast, **`3`** faster, **`4`** skip (10x for now). The first press also drops a baseline at `0:00`. Jump around the video freely; each press uses the current time.
+2. As the video plays, press a digit to set the speed from that point on: **`1`** normal, **`2`** fast, **`3`** faster, **`4`** skip (jumps to the end of the section). The first press also drops a baseline at `0:00`. Jump around the video freely; each press uses the current time.
 3. Press **`Alt+Shift+R`** again (or **End recording**) to finish.
 4. Open the popup, give it a title (description optional), and **Save**. It's now tied to this video and comes back whenever you open it.
 
