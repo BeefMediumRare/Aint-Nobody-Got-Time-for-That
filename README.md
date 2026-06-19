@@ -80,7 +80,7 @@ Pushing a `v*` tag publishes a release. That tag push is the only trigger; commi
 The `version` in `manifest.json` at the tagged commit must match the tag, or the run fails. So you tag whatever the manifest already says (`v1.2.3` for manifest `1.2.3`). Firefox Add-ons also rejects a version it has already accepted, so to publish again, set the manifest to a new version first.
 
 1. Check that `manifest.json`'s `version` is the one you want to publish, and is committed.
-2. Tag that commit and push: `git tag v1.2.3 && git push --tags`.
+2. Tag that commit and push: `git tag v1.2.3 -m v1.2.3 && git push --tags`. The repo signs tags, so the message is required.
 
 The tag push runs `.github/workflows/release.yml`, which checks the tag against the manifest version, runs the tests, builds the package, and submits to Firefox Add-ons once you approve the run.
 
