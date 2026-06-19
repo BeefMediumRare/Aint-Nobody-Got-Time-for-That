@@ -30,6 +30,9 @@
   // The loaded speed map, kept so saving can preserve modes we don't edit (Skip).
   var speedLevels = null;
 
+  // Whether the This device track list is expanded — remembered across re-renders.
+  var localExpanded = false;
+
   // Shallow (default) scans only the chosen folder (maxDepth 0); deep scans
   // every subfolder (maxDepth -1). Warn only for the deep case.
   function syncDepthWarning() {
@@ -93,11 +96,10 @@
       SpeedTrackStore.getAllTracks()
     ]).then(function (arr) {
       var sources = arr[0], repoAll = arr[1], localAll = arr[2];
-      var localCount = sumLists(localAll);
 
       listEl.textContent = '';
       sources.forEach(function (s) {
-        listEl.appendChild(renderSourceItem(s, repoAll[s.id], localCount));
+        listEl.appendChild(renderSourceItem(s, repoAll[s.id], localAll));
       });
 
       // Roll up repo storage: tracks listed (available), tracks actually fetched
@@ -113,7 +115,7 @@
     });
   }
 
-  function renderSourceItem(s, repoEntry, localCount) {
+  function renderSourceItem(s, repoEntry, localAll) {
     var li = document.createElement('li');
     li.className = 'track';
 
@@ -123,16 +125,23 @@
     li.appendChild(title);
 
     if (s.type === 'local') {
-      var lm = document.createElement('div');
-      lm.className = 'source-meta';
-      lm.textContent = (localCount || 0) + ' track(s) saved on this device.';
-      li.appendChild(lm);
+      li.appendChild(renderLocalBody(localAll || {}));
       return li;
     }
 
     var meta = document.createElement('div');
     meta.className = 'source-meta';
-    meta.textContent = s.url || (s.owner + '/' + s.repo + ' @ ' + s.branch + (s.path ? '/' + s.path : ''));
+    if (s.url) {
+      // Clickable, opening the repo folder in a new tab.
+      var link = document.createElement('a');
+      link.href = s.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = s.url;
+      meta.appendChild(link);
+    } else {
+      meta.textContent = s.owner + '/' + s.repo + ' @ ' + s.branch + (s.path ? '/' + s.path : '');
+    }
     li.appendChild(meta);
 
     var count = countOf(repoEntry);
@@ -173,6 +182,89 @@
       return renderSources();
     }).catch(function (err) {
       setStatus('Could not remove "' + name + '": ' + err.message, 'error');
+    });
+  }
+
+  // The This device source body: an expandable list of every saved track grouped
+  // by video id, with per-track and delete-all controls. Expansion is remembered
+  // (localExpanded) so deleting a track doesn't collapse the list on re-render.
+  function renderLocalBody(localAll) {
+    var vids = Object.keys(localAll).sort();
+    var total = sumLists(localAll);
+
+    if (!total) {
+      var empty = document.createElement('div');
+      empty.className = 'source-meta';
+      empty.textContent = 'No tracks saved on this device.';
+      return empty;
+    }
+
+    var details = document.createElement('details');
+    details.open = localExpanded;
+    details.addEventListener('toggle', function () { localExpanded = details.open; });
+
+    var summary = document.createElement('summary');
+    summary.textContent = total + ' track(s) saved on this device.';
+    details.appendChild(summary);
+
+    var actions = document.createElement('div');
+    actions.className = 'track-actions';
+    var delAll = button('Delete all', function () { onDeleteAllLocal(total); });
+    delAll.className = 'danger';
+    actions.appendChild(delAll);
+    details.appendChild(actions);
+
+    var groups = document.createElement('ul');
+    groups.className = 'subtrack-list';
+    vids.forEach(function (vid) {
+      var group = document.createElement('li');
+
+      // The video id links to its YouTube watch page, opened in a new tab.
+      var head = document.createElement('a');
+      head.className = 'subtrack-vid';
+      head.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(vid);
+      head.target = '_blank';
+      head.rel = 'noopener noreferrer';
+      head.textContent = vid;
+      group.appendChild(head);
+
+      localAll[vid].forEach(function (t) {
+        var row = document.createElement('div');
+        row.className = 'subtrack';
+        var name = document.createElement('span');
+        name.className = 'subtrack-title';
+        name.textContent = t.title || '(untitled)';
+        row.appendChild(name);
+        var del = button('Delete', function () { onDeleteLocalTrack(vid, t); });
+        del.className = 'danger';
+        row.appendChild(del);
+        group.appendChild(row);
+      });
+      groups.appendChild(group);
+    });
+    details.appendChild(groups);
+
+    return details;
+  }
+
+  function onDeleteLocalTrack(videoId, t) {
+    var name = t.title || 'untitled';
+    if (!window.confirm('Delete "' + name + '"?')) return;
+    SpeedTrackStore.deleteTrack(videoId, t.id).then(function () {
+      setStatus('Deleted "' + name + '".', 'ok');
+      return renderSources();
+    }).catch(function (err) {
+      setStatus('Could not delete "' + name + '": ' + err.message, 'error');
+    });
+  }
+
+  function onDeleteAllLocal(total) {
+    if (!window.confirm('Delete all ' + total + ' track(s) saved on this device? This cannot be undone.')) return;
+    SpeedTrackStore.clearLocalTracks().then(function () {
+      setStatus('Deleted all ' + total + ' local track(s).', 'ok');
+      return renderSources();
+    }).catch(function (err) {
+      setStatus('Could not delete tracks: ' + err.message, 'error');
     });
   }
 

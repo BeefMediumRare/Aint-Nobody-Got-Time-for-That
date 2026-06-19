@@ -135,6 +135,11 @@
     });
   }
 
+  // Drop every local track at once (the "Delete all" on the This device source).
+  function clearLocalTracks() {
+    return set(KEYS.tracks, {});
+  }
+
   // ---- Repo tracks (read-only, synced from GitHub sources) ------------------
   //
   // Shape: { [sourceId]: { syncedAt, etag, byVideo: { [videoId]: Track[] } } }.
@@ -357,6 +362,7 @@
     getTracksForVideo: getTracksForVideo,
     saveTrack: saveTrack,
     deleteTrack: deleteTrack,
+    clearLocalTracks: clearLocalTracks,
     getAllRepoTracks: getAllRepoTracks,
     getRepoTracksMeta: getRepoTracksMeta,
     getRepoTracksForVideo: getRepoTracksForVideo,

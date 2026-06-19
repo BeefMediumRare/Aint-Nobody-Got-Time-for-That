@@ -82,6 +82,52 @@ p.muted {
   margin: 6px 0 0;
 }
 
+/* The This device track list: video-id groups, each with its track rows. */
+.subtrack-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.subtrack-list > li {
+  margin-bottom: 8px;
+}
+
+.subtrack-vid {
+  display: inline-block;
+  font-family: monospace;
+  font-size: 11px;
+  color: #888;
+  text-decoration: none;
+  margin-bottom: 2px;
+}
+
+.subtrack-vid:hover {
+  text-decoration: underline;
+}
+
+.subtrack {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.subtrack-title {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subtrack button {
+  width: auto;
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  font-size: 12px;
+}
+
 /* Secondary lines under a source's title (URL, counts, last sync). */
 .source-meta {
   font-size: 12px;
