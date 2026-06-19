@@ -6,11 +6,19 @@ A Firefox extension that speeds YouTube up and drops it back to normal for the p
 
 That list of timestamps is called a **track**. Record your own, or sync read-only tracks other people have published.
 
+## A few assumptions
+
+I built this for myself. I'm a father of two with not much spare time right now, and I wanted to squeeze in more disc golf content. That shaped a few things:
+
+- **It's for YouTube.** That's where the videos are.
+- **It assumes YouTube Premium.** There's no handling for ad breaks. I've never tested what one does to the tracks playback.
+- **No Chrome version is planned for now.** Firefox is what I use.
+
 ## For viewers
 
 ### Install
 
-Get it from [Firefox Add-ons](https://addons.mozilla.org/) (search for *Ain't Nobody Got Time for That*), then pin the toolbar icon.
+Get it from [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/aint-nobody-got-time-for-that/), then pin the toolbar icon.
 
 ### Use it
 
