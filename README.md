@@ -73,6 +73,17 @@ Pull requests are welcome; anyone can open one, and the maintainers handle mergi
 
 What matters most is a clear PR description: what you set out to do and what you changed to do it. Write it for someone seeing the change cold.
 
+## Releasing
+
+Releases go to Firefox Add-ons on their own. To cut one:
+
+1. Bump the `version` in `manifest.json`.
+2. Commit it, then tag the commit to match and push: `git tag v1.2.3 && git push --tags`.
+
+Pushing a `v*` tag runs `.github/workflows/release.yml`, which runs the tests, builds the package, and submits it to Firefox Add-ons. The tag has to match the manifest version or the run fails, so the two can't drift, and Firefox Add-ons rejects a version it has already seen, so each release needs a fresh number.
+
+Signing uses two repository secrets, `WEB_EXT_API_KEY` and `WEB_EXT_API_SECRET`, from an add-on API key.
+
 ## License
 
 [MIT](LICENSE). Do what you like with it.
