@@ -1,12 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Ain't Nobody Got Time for That",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Script YouTube playback speed against video timestamps.",
   "browser_specific_settings": {
     "gecko": {
-      "id": "speed-script@local",
-      "strict_min_version": "127.0"
+      "id": "aint-nobody-got-time-for-that@beefmediumrare",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
     }
   },
   "icons": {
