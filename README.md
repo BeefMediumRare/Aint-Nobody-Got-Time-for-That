@@ -75,12 +75,14 @@ What matters most is a clear PR description: what you set out to do and what you
 
 ## Releasing
 
-Releases go to Firefox Add-ons on their own. To cut one:
+Pushing a `v*` tag publishes a release. That tag push is the only trigger; commits and pull requests on their own do nothing.
 
-1. Bump the `version` in `manifest.json`.
-2. Commit it, then tag the commit to match and push: `git tag v1.2.3 && git push --tags`.
+The `version` in `manifest.json` at the tagged commit must match the tag, or the run fails. So you tag whatever the manifest already says (`v1.2.3` for manifest `1.2.3`). Firefox Add-ons also rejects a version it has already accepted, so to publish again, set the manifest to a new version first.
 
-Pushing a `v*` tag runs `.github/workflows/release.yml`, which runs the tests, builds the package, and submits it to Firefox Add-ons. The tag has to match the manifest version or the run fails, so the two can't drift, and Firefox Add-ons rejects a version it has already seen, so each release needs a fresh number.
+1. Check that `manifest.json`'s `version` is the one you want to publish, and is committed.
+2. Tag that commit and push: `git tag v1.2.3 && git push --tags`.
+
+The tag push runs `.github/workflows/release.yml`, which checks the tag against the manifest version, runs the tests, builds the package, and submits to Firefox Add-ons once you approve the run.
 
 Signing uses two repository secrets, `WEB_EXT_API_KEY` and `WEB_EXT_API_SECRET`, from an add-on API key.
 
