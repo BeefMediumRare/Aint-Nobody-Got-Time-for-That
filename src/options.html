@@ -6,83 +6,101 @@
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
-  <h1>Settings</h1>
+  <div class="page">
+    <header class="page-head">
+      <h1>Settings</h1>
+      <!-- Live rollup of repo storage (set by options.js); empty until a repo exists. -->
+      <div id="repo-stats" class="stats"></div>
+    </header>
 
-  <!-- Playback preferences. -->
-  <div class="section">
-    <h2>Playback</h2>
-    <p class="muted">
-      Set how fast each mode plays. Tracks store the mode, not the speed, so these
-      preferences decide how fast every track plays for you.
-    </p>
-    <div class="speed-row">
-      <label for="speed-1">Normal</label>
-      <input id="speed-1" type="number" min="0.1" step="0.05" inputmode="decimal">
-      <span class="speed-suffix">×</span>
-    </div>
-    <div class="speed-row">
-      <label for="speed-2">Fast</label>
-      <input id="speed-2" type="number" min="0.1" step="0.05" inputmode="decimal">
-      <span class="speed-suffix">×</span>
-    </div>
-    <div class="speed-row">
-      <label for="speed-3">Faster</label>
-      <input id="speed-3" type="number" min="0.1" step="0.05" inputmode="decimal">
-      <span class="speed-suffix">×</span>
-    </div>
-    <div class="speed-row muted">
-      <label>Skip</label>
-      <span class="speed-fixed">10×</span>
-      <span class="speed-note">skip coming soon</span>
-    </div>
-    <button id="save-speeds" class="primary">Save speeds</button>
+    <div class="grid">
+      <div class="col">
 
-    <label class="field check">
-      <input type="checkbox" id="show-segments">
-      Show speed segments on the progress bar during playback
-    </label>
+        <!-- Playback preferences. -->
+        <section class="card">
+          <h2>Playback</h2>
+          <p class="muted">
+            Set how fast each mode plays. Tracks store the mode, not the speed, so these
+            preferences decide how fast every track plays for you.
+          </p>
+          <div class="speed-row">
+            <span class="speed-dot" data-code="1" aria-hidden="true"></span>
+            <label for="speed-1">Normal</label>
+            <input id="speed-1" type="number" min="0.1" step="0.05" inputmode="decimal">
+            <span class="speed-suffix">×</span>
+          </div>
+          <div class="speed-row">
+            <span class="speed-dot" data-code="2" aria-hidden="true"></span>
+            <label for="speed-2">Fast</label>
+            <input id="speed-2" type="number" min="0.1" step="0.05" inputmode="decimal">
+            <span class="speed-suffix">×</span>
+          </div>
+          <div class="speed-row">
+            <span class="speed-dot" data-code="3" aria-hidden="true"></span>
+            <label for="speed-3">Faster</label>
+            <input id="speed-3" type="number" min="0.1" step="0.05" inputmode="decimal">
+            <span class="speed-suffix">×</span>
+          </div>
+          <div class="speed-row muted">
+            <span class="speed-dot" data-code="4" aria-hidden="true"></span>
+            <label>Skip</label>
+            <span class="speed-fixed">10×</span>
+            <span class="speed-note">skip coming soon</span>
+          </div>
+          <button id="save-speeds" class="primary">Save speeds</button>
+
+          <label class="field check">
+            <input type="checkbox" id="show-segments">
+            Show speed segments on the progress bar during playback
+          </label>
+        </section>
+
+        <!-- Add a GitHub repository. -->
+        <section class="card">
+          <h2>Add a GitHub repository</h2>
+          <input id="add-label" type="text" placeholder="Label (optional)">
+          <input id="add-url" type="text"
+            placeholder="https://github.com/owner/repo/tree/branch/folder">
+          <label class="field check">
+            <input type="checkbox" id="add-deep">
+            Also scan subfolders (off scans just this folder)
+          </label>
+          <div id="depth-warning" class="muted hidden">
+            This reads every subfolder, however deep, pulling in all track files in the
+            repository. On a large repo that's a lot to download — best reserved for
+            repos dedicated to tracks.
+          </div>
+          <button id="add-btn" class="primary">Add repository</button>
+        </section>
+
+      </div>
+      <div class="col">
+
+        <!-- Configured sources. -->
+        <section class="card">
+          <h2>Track repositories</h2>
+          <p class="muted">
+            Add a public GitHub repository folder to index its tracks. Synced tracks are
+            read-only and appear next to your own tracks on the matching videos. The track
+            list is fetched on add and refresh; each track's file is downloaded the first
+            time you open its video, then cached.
+          </p>
+          <label class="field">
+            Forget cached repo tracks after
+            <input id="cache-expiry" type="number" min="1" step="1" class="num-inline"> days
+          </label>
+          <div class="actions-row">
+            <button id="refresh-all">Refresh all</button>
+            <button id="clear-cache">Clear cached tracks</button>
+          </div>
+          <ul id="source-list"></ul>
+        </section>
+
+      </div>
+    </div>
+
+    <div id="status" class="status"></div>
   </div>
-
-  <!-- Configured sources. -->
-  <div class="section">
-    <h2>Track repositories</h2>
-    <p class="muted">
-      Add a public GitHub repository folder to index its tracks. Synced tracks are
-      read-only and appear next to your own tracks on the matching videos. The track
-      list is fetched on add and refresh; each track's file is downloaded the first
-      time you open its video, then cached.
-    </p>
-    <label class="field">
-      Forget cached repo tracks after
-      <input id="cache-expiry" type="number" min="1" step="1" class="num-inline"> days
-    </label>
-    <div class="actions-row">
-      <button id="refresh-all">Refresh all</button>
-      <button id="clear-cache">Clear cached tracks</button>
-    </div>
-    <div id="repo-stats" class="source-meta"></div>
-    <ul id="source-list"></ul>
-  </div>
-
-  <!-- Add a GitHub repository. -->
-  <div class="section">
-    <h2>Add a GitHub repository</h2>
-    <input id="add-label" type="text" placeholder="Label (optional)">
-    <input id="add-url" type="text"
-      placeholder="https://github.com/owner/repo/tree/branch/folder">
-    <label class="field check">
-      <input type="checkbox" id="add-deep">
-      Also scan subfolders (off scans just this folder)
-    </label>
-    <div id="depth-warning" class="muted hidden">
-      This reads every subfolder, however deep, pulling in all track files in the
-      repository. On a large repo that's a lot to download — best reserved for
-      repos dedicated to tracks.
-    </div>
-    <button id="add-btn" class="primary">Add repository</button>
-  </div>
-
-  <div id="status" class="status"></div>
 
   <script src="theme.js"></script>
   <script src="parser.js"></script>

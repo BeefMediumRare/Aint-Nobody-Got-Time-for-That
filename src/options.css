@@ -1,11 +1,67 @@
-/* The options page opens in a full tab, so widen the popup's fixed 320px body. */
+/* The options page opens in a full tab. Rather than a narrow left-anchored column,
+   it's a centered two-column dashboard: playback + add-repo on the left, the
+   repository list on the right, collapsing to one column when the window is narrow. */
 body {
   width: auto;
-  max-width: 640px;
+}
+
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 28px 72px;
+}
+
+.page-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-head h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
+/* The live storage rollup, sitting in the header as a readout. */
+.stats {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(330px, 380px) 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+/* min-width:0 lets long repo URLs wrap instead of stretching the column. */
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 18px 20px;
 }
 
 p.muted {
-  margin: 0 0 6px;
+  margin: 0 0 10px;
 }
 
 .field {
@@ -41,16 +97,30 @@ p.muted {
   accent-color: var(--accent);
 }
 
-/* One speed mode: a fixed-width label, a narrow value, then a unit/note. */
+/* One speed mode: a ramp-colored dot, a fixed-width label, the value, then a unit. */
 .speed-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
+/* The dot ties each mode to its band on the timeline and the popup strip. */
+.speed-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.speed-dot[data-code="1"] { background: var(--speed-1); }
+.speed-dot[data-code="2"] { background: var(--speed-2); }
+.speed-dot[data-code="3"] { background: var(--speed-3); }
+.speed-dot[data-code="4"] { background: var(--speed-4); }
+
 .speed-row label {
-  width: 64px;
+  width: 60px;
   font-size: 13px;
 }
 
@@ -89,9 +159,16 @@ p.muted {
   width: auto;
 }
 
-#repo-stats {
-  margin: 8px 0 0;
-  font-family: var(--mono);
+/* The configured-sources list. Each source nests a step lighter than the card so
+   it reads as a row on the surface rather than a flat block. */
+#source-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+}
+
+#source-list .track {
+  background: var(--surface-2);
 }
 
 /* The This device track list: video-id groups, each with its track rows. */
@@ -147,3 +224,22 @@ p.muted {
   margin-top: 3px;
   word-break: break-all;
 }
+
+/* Status surfaces as a bottom toast so it never shifts the layout; it's hidden
+   until options.js puts a message in it. */
+.status {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  margin: 0;
+  max-width: 540px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.status:empty { display: none; }
