@@ -26,12 +26,12 @@ body {
   margin: 0;
 }
 
-/* The live storage rollup, sitting in the header as a readout. */
-.stats {
+/* The GitHub-repo storage rollup, a quiet readout above the source list. */
+.repo-stats {
   font-family: var(--mono);
   font-size: 12px;
   color: var(--text-dim);
-  text-align: right;
+  margin: 12px 0 0;
 }
 
 .grid {
