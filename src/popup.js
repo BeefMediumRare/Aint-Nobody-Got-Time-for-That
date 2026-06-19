@@ -32,6 +32,7 @@
   var pendingCues = null;     // cues from a just-ended recording, awaiting a title
   var editingId = null;       // id of the track being edited (null = saving a new one)
   var appliedId = null;       // id of the track currently driving playback, for the active marker
+  var currentDuration = null; // current video's duration, for sizing the preview strips
   var currentTracks = [];     // [{ track, writable }] for the current video
 
   function setStatus(msg, kind) {
@@ -65,6 +66,39 @@
     return b;
   }
 
+  // A thin preview of the track's speed shape, colored from the shared ramp — the
+  // same bands the on-page timeline draws, so a glance here matches the bar there.
+  // Each cue opens a band running to the next (the last runs to the video's end).
+  // Without a known duration (no <video> yet), the trailing band gets an average-
+  // gap tail so the shape still reads, just not to scale.
+  function renderStrip(track) {
+    var strip = document.createElement('div');
+    strip.className = 'track-strip';
+    var theme = window.SpeedTrackTheme;
+    var cues = SpeedTrack.trackToCues(track);
+    if (!theme || !cues || !cues.length) return strip;
+    cues = cues.slice().sort(function (a, b) { return a.t - b.t; });
+
+    var first = cues[0].t, last = cues[cues.length - 1].t;
+    var haveDuration = currentDuration && isFinite(currentDuration) && currentDuration > 0;
+    var tail = cues.length > 1 ? (last - first) / (cues.length - 1) : Math.max(last * 0.1, 1);
+    var total = haveDuration ? currentDuration : (last + tail);
+    if (total <= 0) return strip;
+
+    for (var i = 0; i < cues.length; i++) {
+      var start = cues[i].t;
+      var end = (i + 1 < cues.length) ? cues[i + 1].t : (haveDuration ? currentDuration : last + tail);
+      if (end <= start) continue;
+      var piece = document.createElement('span');
+      piece.style.left = Math.max(0, start / total) * 100 + '%';
+      piece.style.width = Math.min(1, (end - start) / total) * 100 + '%';
+      piece.style.background = theme.speed[cues[i].code] || theme.speedDefault;
+      if (speedLevels && speedLevels[cues[i].code] != null) piece.title = speedLevels[cues[i].code] + 'x';
+      strip.appendChild(piece);
+    }
+    return strip;
+  }
+
   // ---- Render the matching tracks -------------------------------------------
 
   function renderTracks() {
@@ -72,8 +106,9 @@
     noticesEl.textContent = '';
     if (!videoId) {
       currentTracks = [];
-      headingEl.textContent = 'Open a YouTube video to see its tracks.';
-      show(emptyEl, false);
+      headingEl.textContent = 'Tracks';
+      emptyEl.textContent = 'Open a YouTube video to record a speed track or apply a saved one.';
+      show(emptyEl, true);
       refreshSaveButton();
       return Promise.resolve();
     }
@@ -84,6 +119,7 @@
       currentTracks = result.entries.map(function (e) {
         return { track: e.track, writable: e.writable, sourceLabel: e.sourceLabel, sourceUrl: e.sourceUrl };
       });
+      emptyEl.textContent = 'No tracks for this video yet. Hit record to make one, or add a repository in settings.';
       show(emptyEl, currentTracks.length === 0);
       currentTracks.forEach(function (e) {
         listEl.appendChild(renderTrackItem(e.track, e.writable, e.sourceLabel, e.sourceUrl));
@@ -143,6 +179,14 @@
       badge.className = 'track-active-badge';
       badge.textContent = 'Active';
       title.appendChild(badge);
+    } else if (writable) {
+      // Local tracks are an author's work-in-progress until committed to a repo;
+      // flag them so they're not mistaken for a published one. (The active glow
+      // takes the title's chip slot when the track is live.)
+      var draft = document.createElement('span');
+      draft.className = 'track-draft-badge';
+      draft.textContent = 'Draft';
+      title.appendChild(draft);
     }
     li.appendChild(title);
 
@@ -172,6 +216,8 @@
       }
       li.appendChild(src);
     }
+
+    li.appendChild(renderStrip(track));
 
     var actions = document.createElement('div');
     actions.className = 'track-actions';
@@ -418,6 +464,7 @@
     // shows its Stop button. Resolve this before the first render so it shows.
     return browserApi.tabs.sendMessage(tab.id, { type: 'getPlaybackStatus' }).then(function (resp) {
       appliedId = (resp && resp.appliedId) || null;
+      currentDuration = (resp && resp.duration) || null;
     }).catch(function () { appliedId = null; }).then(function () {
       return browserApi.tabs.sendMessage(tab.id, { type: 'getStatus' });
     }).then(function (resp) {

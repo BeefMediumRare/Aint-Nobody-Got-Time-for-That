@@ -246,6 +246,44 @@ li.track--active {
   vertical-align: middle;
 }
 
+/* Local tracks are an author's work-in-progress: a dashed warm edge sets them
+   apart from the solid, committed repo tracks (but not when they're live, where
+   the active glow owns the framing). */
+li.track--local:not(.track--active) {
+  border-left: 2px dashed rgba(251, 191, 36, 0.5);
+}
+
+.track-draft-badge {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--speed-3);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  vertical-align: middle;
+}
+
+/* The per-track speed-strip: ramp-colored bands previewing the track's shape,
+   drawn over an empty (untracked) track in the surface color. */
+.track-strip {
+  position: relative;
+  height: 6px;
+  margin-top: 8px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.track-strip span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
 .track-title {
   font-size: 13px;
   font-weight: 600;

@@ -133,7 +133,14 @@
         return true;
       }
       if (msg.type === 'getPlaybackStatus') {
-        sendResponse({ applied: segments.length > 0, appliedId: appliedId });
+        // Hand back the duration too: the popup normalizes each track's preview
+        // strip against it (the tracks it lists are all for this video).
+        var v = getVideo();
+        sendResponse({
+          applied: segments.length > 0,
+          appliedId: appliedId,
+          duration: (v && isFinite(v.duration)) ? v.duration : null
+        });
         return true;
       }
     });
