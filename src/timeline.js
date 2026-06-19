@@ -20,15 +20,13 @@
   var PIN_STYLE_ID = 'speed-track-pin-style';
   var PIN_CLASS = 'speed-track-pin';
 
-  // code -> tick color (1 normal, 2 fast, 3 faster, 4 skip). Kept eyeball-simple.
+  // code -> band color (1 normal, 2 fast, 3 faster, 4 skip), from the shared speed
+  // ramp so the bands, the toolbar badge, and the popup's strip stay in step. The
+  // ramp runs cool -> hot, so the timeline reads as a velocity scale at a glance.
   function codeColor(code) {
-    switch (code) {
-      case 1: return '#2e7d32'; // green
-      case 2: return '#1565c0'; // blue
-      case 3: return '#ef6c00'; // orange
-      case 4: return '#c62828'; // red
-      default: return '#9e9e9e';
-    }
+    var t = (typeof SpeedTrackTheme !== 'undefined') ? SpeedTrackTheme : null;
+    if (t && t.speed[code]) return t.speed[code];
+    return (t && t.speedDefault) || '#69728a';
   }
 
   function levels() {
@@ -91,11 +89,13 @@
       var widthPct = ((endT - startT) / duration) * 100;
 
       // Sit a little above the thin progress bar (a touch thicker than the bar) so
-      // the bands read as a speed legend without hiding YouTube's played-fill.
+      // the bands read as a speed legend without hiding YouTube's played-fill. A
+      // 1px dark seam on the trailing edge separates adjacent bands of different
+      // speeds so the boundaries stay crisp over YouTube's bar.
       var band = document.createElement('div');
       band.style.cssText =
-        'position:absolute;bottom:calc(50% + 3px);height:5px;' +
-        'pointer-events:none;' +
+        'position:absolute;bottom:calc(50% + 3px);height:6px;border-radius:1px;' +
+        'pointer-events:none;box-shadow:1px 0 0 rgba(0,0,0,0.45);' +
         'left:' + leftPct + '%;width:' + widthPct + '%;background:' + points[i].color + ';';
       if (points[i].title) band.title = points[i].title;
       overlay.appendChild(band);

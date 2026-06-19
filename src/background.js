@@ -12,9 +12,12 @@
   var browserApi = (typeof browser !== 'undefined') ? browser : chrome;
   var action = browserApi.action || browserApi.browserAction;
 
-  var RECORD_COLOR = '#c0392b'; // red
-  var TRACKS_COLOR = '#1565c0'; // blue (matches the "fast" timeline tick)
-  var ACTIVE_COLOR = '#2e7d32'; // green (matches the popup's active-track marker)
+  // Badge fills come from the shared palette so they read as the same scheme as
+  // the timeline and popup. (Fallbacks keep the badge working if theme.js is absent.)
+  var theme = (typeof SpeedTrackTheme !== 'undefined') ? SpeedTrackTheme : {};
+  var RECORD_COLOR = theme.rec || '#dc2626';         // red
+  var TRACKS_COLOR = theme.tracksBadge || '#3a4150'; // quiet slate count
+  var ACTIVE_COLOR = theme.activeBadge || '#4f46e5'; // indigo "live here"
 
   var tabVideo = {};      // tabId -> videoId reported by the content script
   var recordingTabs = {}; // tabId -> true while authoring (recording badge wins)
@@ -24,6 +27,13 @@
     action.setBadgeText({ text: text, tabId: tabId });
   }
 
+  // Pin white badge text rather than leaning on the browser's auto-contrast: our
+  // fills are mid-tone, where the auto choice can land on hard-to-read dark text.
+  function setColor(tabId, color) {
+    action.setBadgeBackgroundColor({ color: color, tabId: tabId });
+    if (action.setBadgeTextColor) action.setBadgeTextColor({ color: '#ffffff', tabId: tabId });
+  }
+
   // The tab's badge. Precedence: recording (red, set elsewhere) > a track actively
   // driving playback (green ▶) > the count of tracks matching the video (blue) >
   // empty. The green flag is the on-page "a track is live here" cue now that the
@@ -31,7 +41,7 @@
   function updateTrackBadge(tabId) {
     if (tabId == null || recordingTabs[tabId]) return;
     if (activeTabs[tabId]) {
-      action.setBadgeBackgroundColor({ color: ACTIVE_COLOR, tabId: tabId });
+      setColor(tabId, ACTIVE_COLOR);
       setText(tabId, '▶');
       return;
     }
@@ -43,7 +53,7 @@
     lookup.then(function (count) {
       if (recordingTabs[tabId] || activeTabs[tabId]) return; // state changed while we awaited
       if (count) {
-        action.setBadgeBackgroundColor({ color: TRACKS_COLOR, tabId: tabId });
+        setColor(tabId, TRACKS_COLOR);
         setText(tabId, String(count));
       } else {
         setText(tabId, '');
@@ -58,7 +68,7 @@
     if (msg.type === 'badge') {
       if (msg.recording) {
         recordingTabs[tabId] = true;
-        action.setBadgeBackgroundColor({ color: RECORD_COLOR, tabId: tabId });
+        setColor(tabId, RECORD_COLOR);
         setText(tabId, msg.count ? String(msg.count) : '●');
       } else {
         delete recordingTabs[tabId];

@@ -23,12 +23,12 @@
     "open_in_tab": true
   },
   "background": {
-    "scripts": ["src/parser.js", "src/storage.js", "src/tracks.js", "src/background.js"]
+    "scripts": ["src/theme.js", "src/parser.js", "src/storage.js", "src/tracks.js", "src/background.js"]
   },
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*"],
-      "js": ["src/parser.js", "src/storage.js", "src/video-id.js", "src/content.js", "src/timeline.js", "src/author.js"],
+      "js": ["src/theme.js", "src/parser.js", "src/storage.js", "src/video-id.js", "src/content.js", "src/timeline.js", "src/author.js"],
       "run_at": "document_idle"
     }
   ]
