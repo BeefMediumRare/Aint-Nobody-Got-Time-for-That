@@ -13,7 +13,6 @@
   var speed1 = document.getElementById('speed-1');
   var speed2 = document.getElementById('speed-2');
   var speed3 = document.getElementById('speed-3');
-  var saveSpeedsBtn = document.getElementById('save-speeds');
   var showSegments = document.getElementById('show-segments');
   var cacheExpiry = document.getElementById('cache-expiry');
   var refreshAllBtn = document.getElementById('refresh-all');
@@ -297,7 +296,12 @@
       setStatus('Could not save speeds: ' + err.message, 'error');
     });
   }
-  saveSpeedsBtn.addEventListener('click', saveSpeeds);
+  // No Save button — each mode persists as soon as you change it (storage.local is
+  // cheap). 'change' (not 'input') fires on blur/enter/step, so we don't write on
+  // every keystroke mid-edit.
+  [speed1, speed2, speed3].forEach(function (el) {
+    el.addEventListener('change', saveSpeeds);
+  });
 
   // The content script picks this up live via storage.onChanged.
   showSegments.addEventListener('change', function () {
