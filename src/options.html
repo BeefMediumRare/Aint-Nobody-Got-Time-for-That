@@ -19,7 +19,7 @@
           <h2>Playback</h2>
           <p class="muted">
             Set how fast each mode plays. Tracks store the mode, not the speed, so these
-            preferences decide how fast every track plays for you. Changes save as you make them.
+            set your speed for every track. Saved as you go.
           </p>
           <div class="speed-grid">
             <div class="speed-row">
@@ -50,7 +50,7 @@
           <label class="field toggle">
             <input type="checkbox" id="show-segments">
             <span class="switch" aria-hidden="true"></span>
-            Show speed segments on the progress bar during playback
+            Show speed segments on playback
           </label>
         </section>
 
@@ -62,12 +62,11 @@
             placeholder="https://github.com/owner/repo/tree/branch/folder">
           <label class="field check">
             <input type="checkbox" id="add-deep">
-            Also scan subfolders (off scans just this folder)
+            Also scan subfolders (off scans this folder only)
           </label>
           <div id="depth-warning" class="muted hidden">
-            This reads every subfolder, however deep, pulling in all track files in the
-            repository. On a large repo that's a lot to download — best reserved for
-            repos dedicated to tracks.
+            Reads every subfolder and downloads all track files in the repo. That's a lot
+            on a big repo, so it's best kept for repos that are only tracks.
           </div>
           <button id="add-btn" class="primary">Add repository</button>
         </section>
@@ -79,10 +78,9 @@
         <section class="card">
           <h2>Track repositories</h2>
           <p class="muted">
-            Add a public GitHub repository folder to index its tracks. Synced tracks are
-            read-only and appear next to your own tracks on the matching videos. The track
-            list is fetched on add and refresh; each track's file is downloaded the first
-            time you open its video, then cached.
+            Index tracks from a public GitHub folder. Synced tracks are read-only and sit
+            next to yours on matching videos. The list updates on add and refresh; each
+            track downloads the first time you open its video, then caches.
           </p>
           <label class="field">
             Forget cached repo tracks after

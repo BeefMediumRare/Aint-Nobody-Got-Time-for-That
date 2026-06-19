@@ -107,7 +107,7 @@
     if (!videoId) {
       currentTracks = [];
       headingEl.textContent = 'Tracks';
-      emptyEl.textContent = 'Open a YouTube video to record a speed track or apply a saved one.';
+      emptyEl.textContent = 'Open a YouTube video to record a track or apply one.';
       show(emptyEl, true);
       refreshSaveButton();
       return Promise.resolve();
@@ -119,7 +119,7 @@
       currentTracks = result.entries.map(function (e) {
         return { track: e.track, writable: e.writable, sourceLabel: e.sourceLabel, sourceUrl: e.sourceUrl };
       });
-      emptyEl.textContent = 'No tracks for this video yet. Hit record to make one, or add a repository in settings.';
+      emptyEl.textContent = 'No tracks for this video yet. Record one, or add a repository in settings.';
       show(emptyEl, currentTracks.length === 0);
       currentTracks.forEach(function (e) {
         listEl.appendChild(renderTrackItem(e.track, e.writable, e.sourceLabel, e.sourceUrl));
@@ -150,10 +150,10 @@
   function refreshSaveButton() {
     var match = findTrackEntry(titleInput.value.trim(), editingId);
     if (match && !match.writable) {
-      saveBtn.textContent = 'Cannot overwrite a read-only track';
+      saveBtn.textContent = "Can't overwrite a read-only track";
       saveBtn.disabled = true;
     } else if (editingId) {
-      saveBtn.textContent = match ? 'Title already used by another track' : 'Update track';
+      saveBtn.textContent = match ? 'Title already taken' : 'Update track';
       saveBtn.disabled = !!match;
     } else {
       saveBtn.textContent = match ? 'Overwrite track' : 'Save track';
@@ -256,13 +256,13 @@
       if (resp && resp.ok) {
         appliedId = track.id;
         renderTracks();
-        var note = resp.videoFound ? '' : ' (no <video> on page yet)';
-        setStatus('Applied "' + track.title + '" — ' + resp.segmentCount + ' segment(s).' + note, 'ok');
+        var note = resp.videoFound ? '' : ' (no video on the page yet)';
+        setStatus('Applied "' + track.title + '", ' + resp.segmentCount + ' segment(s).' + note, 'ok');
       } else if (resp !== undefined) {
-        setStatus('Applied, but no response from page.', 'ok');
+        setStatus("Applied, but the page didn't respond.", 'ok');
       }
     }).catch(function (err) {
-      setStatus('Could not reach the page. Is this a YouTube tab?\n' + err.message, 'error');
+      setStatus("Couldn't reach the page. Is this a YouTube tab?\n" + err.message, 'error');
     });
   }
 
@@ -275,11 +275,11 @@
         if (resp && resp.ok) {
           appliedId = null;
           renderTracks();
-          setStatus('Stopped. Playback speed reset to 1×.', 'ok');
+          setStatus('Stopped. Speed back to 1×.', 'ok');
         }
       });
     }).catch(function (err) {
-      setStatus('Could not reach the page. Is this a YouTube tab?\n' + err.message, 'error');
+      setStatus("Couldn't reach the page. Is this a YouTube tab?\n" + err.message, 'error');
     });
   }
 
@@ -294,7 +294,7 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-    setStatus('Downloaded ' + name + ' — commit it to a track repo.', 'ok');
+    setStatus('Downloaded ' + name + '. Commit it to a track repo.', 'ok');
   }
 
   function deleteTrack(track) {
@@ -318,7 +318,7 @@
     refreshSaveButton();
     titleInput.focus();
     titleInput.select();
-    setStatus('Cloning "' + track.title + '" into a local copy. Adjust and Save.', 'ok');
+    setStatus('Cloning "' + track.title + '" to a local copy. Adjust, then Save.', 'ok');
   }
 
   // Reopen a saved track as a recording, seeded with its cues. Ending the session
@@ -335,11 +335,11 @@
         if (resp && resp.ok) {
           setRecording(true);
           show(saveForm, false);
-          setStatus('Editing "' + track.title + '". Adjust cues if you like, then End recording.', 'ok');
+          setStatus('Editing "' + track.title + '". Adjust cues, then End recording.', 'ok');
         }
       });
     }).catch(function (err) {
-      setStatus('Could not reach the page. Is this a YouTube tab?\n' + err.message, 'error');
+      setStatus("Couldn't reach the page. Is this a YouTube tab?\n" + err.message, 'error');
     });
   }
 
@@ -353,7 +353,7 @@
           editingId = null;
           setRecording(true);
           show(saveForm, false);
-          setStatus('Recording. Press 1-4 at any moment to set the speed there.', 'ok');
+          setStatus('Recording. Press 1-4 to set the speed at any point.', 'ok');
         });
       }
       return browserApi.tabs.sendMessage(tab.id, { type: 'stopRecording' }).then(function (resp) {
@@ -362,7 +362,7 @@
         offerSave(resp && resp.cues, resp && resp.edit);
       });
     }).catch(function (err) {
-      setStatus('Could not reach the page. Is this a YouTube tab?\n' + err.message, 'error');
+      setStatus("Couldn't reach the page. Is this a YouTube tab?\n" + err.message, 'error');
     });
   });
 
@@ -382,24 +382,24 @@
     refreshSaveButton();
     titleInput.focus();
     setStatus(editingId
-      ? 'Editing "' + meta.title + '". Save to update it — rename freely; it stays the same track.'
+      ? 'Editing "' + meta.title + '". Save to update it. Rename if you like; it stays the same track.'
       : 'Recording ended. Name it and Save.', 'ok');
   }
 
   saveBtn.addEventListener('click', function () {
     var title = titleInput.value.trim();
     if (!title) { setStatus('Give the track a title.', 'error'); titleInput.focus(); return; }
-    if (!videoId) { setStatus('No video id for this page — open the video first.', 'error'); return; }
+    if (!videoId) { setStatus('No video on this page. Open a video first.', 'error'); return; }
     if (!pendingCues || !pendingCues.length) { setStatus('Nothing recorded to save.', 'error'); return; }
 
     var match = findTrackEntry(title, editingId);
     if (match && !match.writable) {
-      setStatus('"' + title + '" is read-only — change the title to save a local copy.', 'error');
+      setStatus('"' + title + '" is read-only. Change the title to save a local copy.', 'error');
       titleInput.focus();
       return;
     }
     if (match && editingId) {
-      setStatus('Another track already uses the title "' + title + '". Pick a unique title.', 'error');
+      setStatus('Another track already uses "' + title + '". Pick a different title.', 'error');
       titleInput.focus();
       return;
     }
@@ -419,7 +419,7 @@
       });
       return renderTracks();
     }).catch(function (err) {
-      setStatus('Could not save: ' + err.message, 'error');
+      setStatus("Couldn't save: " + err.message, 'error');
     });
   });
 

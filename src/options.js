@@ -176,10 +176,10 @@
     setStatus('Syncing "' + name + '"…');
     SpeedTrackSources.refreshSource(s.id).then(function (r) {
       if (r && r.unchanged) setStatus('"' + name + '" is already up to date.', 'ok');
-      else setStatus('Synced "' + name + '" — ' + (r ? r.count : 0) + ' track(s).' + noticeText(r), 'ok');
+      else setStatus('Synced "' + name + '", ' + (r ? r.count : 0) + ' track(s).' + noticeText(r), 'ok');
       return renderSources();
     }).catch(function (err) {
-      setStatus('Could not sync "' + name + '": ' + err.message, 'error');
+      setStatus('Couldn\'t sync "' + name + '": ' + err.message, 'error');
     });
   }
 
@@ -190,7 +190,7 @@
       setStatus('Removed "' + name + '".', 'ok');
       return renderSources();
     }).catch(function (err) {
-      setStatus('Could not remove "' + name + '": ' + err.message, 'error');
+      setStatus('Couldn\'t remove "' + name + '": ' + err.message, 'error');
     });
   }
 
@@ -256,17 +256,17 @@
       setStatus('Deleted "' + name + '".', 'ok');
       return renderSources();
     }).catch(function (err) {
-      setStatus('Could not delete "' + name + '": ' + err.message, 'error');
+      setStatus('Couldn\'t delete "' + name + '": ' + err.message, 'error');
     });
   }
 
   function onDeleteAllLocal(total) {
-    if (!window.confirm('Delete all ' + total + ' track(s) saved on this device? This cannot be undone.')) return;
+    if (!window.confirm('Delete all ' + total + ' track(s) on this device? This can\'t be undone.')) return;
     SpeedTrackStore.clearLocalTracks().then(function () {
       setStatus('Deleted all ' + total + ' local track(s).', 'ok');
       return renderSources();
     }).catch(function (err) {
-      setStatus('Could not delete tracks: ' + err.message, 'error');
+      setStatus("Couldn't delete tracks: " + err.message, 'error');
     });
   }
 
@@ -296,7 +296,7 @@
       speedLevels = map;
       setStatus('Saved playback speeds.', 'ok');
     }).catch(function (err) {
-      setStatus('Could not save speeds: ' + err.message, 'error');
+      setStatus("Couldn't save speeds: " + err.message, 'error');
     });
   }
   // No Save button — each mode persists as soon as you change it (storage.local is
@@ -310,8 +310,8 @@
   showSegments.addEventListener('change', function () {
     SpeedTrackStore.setShowSegments(showSegments.checked).then(function () {
       setStatus(showSegments.checked
-        ? 'Speed segments shown during playback.'
-        : 'Speed segments hidden during playback.', 'ok');
+        ? 'Showing speed segments.'
+        : 'Hiding speed segments.', 'ok');
     });
   });
 
@@ -354,11 +354,11 @@
   clearCacheBtn.addEventListener('click', function () {
     SpeedTrackStore.clearRepoCache().then(function (removed) {
       setStatus(removed
-        ? 'Cleared ' + removed + ' cached repo track(s). They re-download when next opened.'
+        ? 'Cleared ' + removed + ' cached repo track(s). They re-download next time you open them.'
         : 'No cached repo tracks to clear.', 'ok');
       return renderSources();
     }).catch(function (err) {
-      setStatus('Could not clear cache: ' + err.message, 'error');
+      setStatus("Couldn't clear cache: " + err.message, 'error');
     });
   });
 
@@ -372,7 +372,7 @@
     // Parse synchronously so the permission request stays in the user gesture.
     var parsed = SpeedTrackSources.parseRepoUrl(url);
     if (!parsed) {
-      setStatus('That doesn’t look like a GitHub repository folder URL.', 'error');
+      setStatus("That doesn't look like a GitHub folder URL.", 'error');
       urlInput.focus();
       return;
     }
@@ -380,7 +380,7 @@
     setStatus('Requesting access to GitHub…');
     browserApi.permissions.request({ origins: GH_ORIGINS }).then(function (granted) {
       if (!granted) {
-        setStatus('GitHub access was not granted, so the repository can’t be synced.', 'error');
+        setStatus("GitHub access denied, so the repository can't sync.", 'error');
         return;
       }
       setStatus('Adding and syncing…');
@@ -388,11 +388,11 @@
         .then(function (res) {
           labelInput.value = '';
           urlInput.value = '';
-          setStatus('Added "' + res.source.label + '" — synced ' + res.count + ' track(s).' + noticeText(res), 'ok');
+          setStatus('Added "' + res.source.label + '", synced ' + res.count + ' track(s).' + noticeText(res), 'ok');
           return renderSources();
         });
     }).catch(function (err) {
-      setStatus('Could not add repository: ' + err.message, 'error');
+      setStatus("Couldn't add repository: " + err.message, 'error');
     });
   });
 
