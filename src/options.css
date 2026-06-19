@@ -238,20 +238,23 @@ p.muted {
   background: var(--surface-2);
 }
 
-/* "Delete all" is rare and destructive, so it sits as a compact button on the
-   right rather than a full-width bar. (Scoped to the local body's details so it
-   doesn't catch the repo rows' Refresh/Delete actions.) */
-details > .track-actions {
-  justify-content: flex-end;
-  margin: 8px 0 14px;
+/* The This device header carries Delete all on the right, out of the collapse so
+   it's reachable without expanding (it's rare and destructive, so a compact button
+   rather than a full-width bar). */
+.track-title.local-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-details > .track-actions button {
+.local-head button {
   flex: none;
   width: auto;
   margin: 0;
-  padding: 5px 12px;
+  padding: 4px 10px;
   font-size: 12px;
+  font-weight: 400;
 }
 
 /* The This device track list: video-id groups, each with its track rows. */

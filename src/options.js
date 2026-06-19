@@ -124,7 +124,17 @@
     li.appendChild(title);
 
     if (s.type === 'local') {
-      li.appendChild(renderLocalBody(localAll || {}));
+      var localMap = localAll || {};
+      // Delete all sits in the header, outside the collapse, so it's reachable
+      // without expanding the list (it clears every local track regardless).
+      var localTotal = sumLists(localMap);
+      if (localTotal) {
+        title.classList.add('local-head');
+        var delAll = button('Delete all', function () { onDeleteAllLocal(localTotal); });
+        delAll.className = 'danger';
+        title.appendChild(delAll);
+      }
+      li.appendChild(renderLocalBody(localMap));
       return li;
     }
 
@@ -205,13 +215,6 @@
     var summary = document.createElement('summary');
     summary.textContent = total + ' track(s) saved on this device.';
     details.appendChild(summary);
-
-    var actions = document.createElement('div');
-    actions.className = 'track-actions';
-    var delAll = button('Delete all', function () { onDeleteAllLocal(total); });
-    delAll.className = 'danger';
-    actions.appendChild(delAll);
-    details.appendChild(actions);
 
     var groups = document.createElement('ul');
     groups.className = 'subtrack-list';
