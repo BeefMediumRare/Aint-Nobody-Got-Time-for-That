@@ -1,15 +1,17 @@
-// timeline.js — tick overlay on YouTube's progress bar (content script).
+// timeline.js — speed-segment overlay on YouTube's progress bar (content script).
 //
-// Draws a colored tick on the scrubber for each speed change, positioned by
-// timestamp and colored by speed. Two callers:
+// Each speed change opens a segment that runs until the next change (the last one
+// runs to the end of the video). We draw a colored band over the bar for each
+// segment, colored by its speed, so the whole timeline reads as bands of speed.
+// Two callers:
 //   - author.js (recording): render(cues) on every cue change, clear() at the end.
-//     Colored by cue code. Pins the controls visible so ticks don't auto-hide.
+//     Colored by cue code. Pins the controls visible so the bands don't auto-hide.
 //   - content.js (playback): renderSegments(segments) when a track is applied, then
 //     refreshSegments(segments) from its rAF loop to redraw if YouTube re-renders
-//     the bar. Colored by rate. Controls are NOT pinned — ticks ride the bar's
+//     the bar. Colored by rate. Controls are NOT pinned — the bands ride the bar's
 //     normal show/hide.
 //
-// Positions are percentage-based against video.duration, so ticks survive a resize.
+// Positions are percentage-based against video.duration, so bands survive a resize.
 
 (function () {
   'use strict';
@@ -61,7 +63,9 @@
     return overlay;
   }
 
-  // Draw a normalized tick list [{ t, color, title }]. Idempotent: clears + redraws.
+  // Draw a normalized list of speed-change points [{ t, color, title }] as bands.
+  // Each point opens a band that runs to the next point (the last runs to the end
+  // of the video), colored by that point's speed. Idempotent: clears + redraws.
   function paint(items) {
     var overlay = ensureOverlay();
     if (!overlay) return;
@@ -73,20 +77,28 @@
     var duration = video && video.duration;
     if (!duration) return; // NaN/0 right after load — nothing sensible to position yet
 
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i];
-      var pct = Math.max(0, Math.min(100, (item.t / duration) * 100));
+    // Defensive: spans assume ascending order. Callers already sort, but a stray
+    // order would draw overlapping/negative-width bands.
+    var points = items.slice().sort(function (a, b) { return a.t - b.t; });
 
-      // Protrude above/below the thin progress bar so ticks are easy to see and
-      // their colors are distinguishable; a dark outline keeps them visible against
-      // both the red played-fill and the gray track.
-      var tick = document.createElement('div');
-      tick.style.cssText =
-        'position:absolute;top:-7px;height:18px;width:3px;margin-left:-1.5px;border-radius:1px;' +
-        'pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,0.5);' +
-        'left:' + pct + '%;background:' + item.color + ';';
-      if (item.title) tick.title = item.title;
-      overlay.appendChild(tick);
+    for (var i = 0; i < points.length; i++) {
+      var startT = Math.max(0, Math.min(duration, points[i].t));
+      var endT = (i + 1 < points.length) ? points[i + 1].t : duration;
+      endT = Math.max(0, Math.min(duration, endT));
+      if (endT <= startT) continue;
+
+      var leftPct = (startT / duration) * 100;
+      var widthPct = ((endT - startT) / duration) * 100;
+
+      // Sit a little above the thin progress bar (a touch thicker than the bar) so
+      // the bands read as a speed legend without hiding YouTube's played-fill.
+      var band = document.createElement('div');
+      band.style.cssText =
+        'position:absolute;bottom:calc(50% + 3px);height:5px;' +
+        'pointer-events:none;' +
+        'left:' + leftPct + '%;width:' + widthPct + '%;background:' + points[i].color + ';';
+      if (points[i].title) band.title = points[i].title;
+      overlay.appendChild(band);
     }
   }
 
@@ -123,7 +135,7 @@
     if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
   }
 
-  // Keep YouTube's bottom controls (and thus the progress bar + ticks) from
+  // Keep YouTube's bottom controls (and thus the progress bar + bands) from
   // auto-hiding while idle: !important overrides the .ytp-autohide opacity fade,
   // scoped to a class we add to the player only during the session.
   function pin() {
