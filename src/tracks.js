@@ -377,11 +377,19 @@
     });
   }
 
-  // Refresh all GitHub sources sequentially (gentle on the rate limit). Resolves
-  // an array of { source, result } / { source, error } — never rejects per-source.
+  // Refresh all GitHub sources sequentially (gentle on the rate limit). Oldest-
+  // synced first, so if a later repo trips the rate limit the most overdue ones
+  // have already refreshed (a never-synced source sorts oldest). Resolves an array
+  // of { source, result } / { source, error } — never rejects per-source.
   function refreshAll() {
-    return SpeedTrackStore.getSources().then(function (sources) {
+    return Promise.all([SpeedTrackStore.getSources(), SpeedTrackStore.getAllRepoTracks()]).then(function (arr) {
+      var sources = arr[0], repoAll = arr[1];
       var gh = sources.filter(function (s) { return s.type === 'github'; });
+      gh.sort(function (a, b) {
+        var ta = (repoAll[a.id] && repoAll[a.id].syncedAt) || 0;
+        var tb = (repoAll[b.id] && repoAll[b.id].syncedAt) || 0;
+        return ta - tb;
+      });
       return gh.reduce(function (p, s) {
         return p.then(function (acc) {
           return syncSource(s).then(

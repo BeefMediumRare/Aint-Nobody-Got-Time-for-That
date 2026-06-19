@@ -318,25 +318,21 @@
 
   // ---- Refresh all repositories ---------------------------------------------
   //
-  // Sequential (not parallel) so a row of repos doesn't hammer GitHub's rate limit.
+  // Delegates to SpeedTrackSources.refreshAll, which syncs sequentially (gentle on
+  // the rate limit) and oldest-synced first.
   function refreshAll() {
+    var noun = function (n) { return n + (n === 1 ? ' repository' : ' repositories'); };
     SpeedTrackStore.getSources().then(function (sources) {
       var repos = sources.filter(function (s) { return s.type === 'github'; });
-      var noun = function (n) { return n + (n === 1 ? ' repository' : ' repositories'); };
       if (!repos.length) { setStatus('No repositories to refresh.', 'ok'); return; }
-
       setStatus('Refreshing ' + noun(repos.length) + '…');
-      var updated = 0, failed = 0;
-      var chain = repos.reduce(function (p, s) {
-        return p.then(function () {
-          return SpeedTrackSources.refreshSource(s.id)
-            .then(function (r) { if (r && !r.unchanged) updated++; })
-            .catch(function () { failed++; });
+      return SpeedTrackSources.refreshAll().then(function (results) {
+        var updated = 0, failed = 0;
+        results.forEach(function (r) {
+          if (r.error) failed++;
+          else if (r.result && !r.result.unchanged) updated++;
         });
-      }, Promise.resolve());
-
-      chain.then(function () {
-        var msg = 'Refreshed ' + noun(repos.length) + '.';
+        var msg = 'Refreshed ' + noun(results.length) + '.';
         if (updated) msg += ' ' + updated + ' updated.';
         if (failed) msg += ' ' + failed + ' failed.';
         setStatus(msg, failed ? 'error' : 'ok');
