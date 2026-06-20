@@ -11,6 +11,12 @@ body {
   padding: 24px 28px 72px;
 }
 
+.page-foot {
+  margin-top: 24px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
 .page-head {
   display: flex;
   align-items: baseline;

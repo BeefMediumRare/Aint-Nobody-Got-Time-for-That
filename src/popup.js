@@ -455,6 +455,11 @@
 
   // ---- Init -----------------------------------------------------------------
 
+  var versionEl = document.getElementById('version');
+  if (versionEl && browserApi.runtime.getManifest) {
+    versionEl.textContent = 'v' + browserApi.runtime.getManifest().version;
+  }
+
   SpeedTrackStore.ensureSeeded();
   SpeedTrackStore.getSpeedLevels().then(function (m) { speedLevels = m; });
 

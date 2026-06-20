@@ -203,6 +203,14 @@ button:disabled {
   padding-top: 12px;
 }
 
+/* Version sits at the left; margin-right pushes the buttons to the right edge. */
+.version {
+  margin-right: auto;
+  align-self: center;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
 .icon-btn {
   margin-top: 0;
   width: auto;
