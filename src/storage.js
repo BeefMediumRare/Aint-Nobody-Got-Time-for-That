@@ -6,7 +6,7 @@
 //
 // Persisted state:
 //   tracks       { [videoId]: Track[] }  — saved/imported local tracks, by video id
-//   repoTracks   { [sourceId]: { syncedAt, etag, index, byVideo } } — read-only
+//   repoTracks   { [sourceId]: { syncedAt, etag, indexVersion, index, byVideo } } — read-only
 //                tracks from a GitHub source. `index` { [videoId]: [path] } is the
 //                lightweight listing built on sync (videoId from the filename);
 //                `byVideo` { [videoId]: Track[] } caches the files actually fetched
@@ -153,7 +153,7 @@
   function getRepoTracksMeta(sourceId) {
     return getAllRepoTracks().then(function (all) {
       var e = all[sourceId];
-      return e ? { syncedAt: e.syncedAt, etag: e.etag } : null;
+      return e ? { syncedAt: e.syncedAt, etag: e.etag, indexVersion: e.indexVersion || 1 } : null;
     });
   }
 
@@ -180,6 +180,7 @@
       all[sourceId] = {
         syncedAt: (meta && meta.syncedAt != null) ? meta.syncedAt : Date.now(),
         etag: (meta && meta.etag != null) ? meta.etag : (prior.etag || null),
+        indexVersion: (meta && meta.indexVersion != null) ? meta.indexVersion : (prior.indexVersion || null),
         index: index || {},
         byVideo: {}
       };

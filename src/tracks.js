@@ -32,6 +32,11 @@
   var MAX_FILE_BYTES = 256 * 1024;
   var FETCH_CONCURRENCY = 4;
 
+  // Bumped when the way we derive an index from filenames changes, so existing
+  // installs rebuild rather than keep a stale index behind a 304. v2 fixed
+  // videoIdFromPath for ids containing '_' (was truncating at the first one).
+  var INDEX_VERSION = 2;
+
   // ---- Pure helpers (tested) ------------------------------------------------
 
   // Parse a GitHub repo-folder URL into { owner, repo, branch, path }. branch and
@@ -178,7 +183,9 @@
     var parsed = { owner: source.owner, repo: source.repo, branch: source.branch };
     return SpeedTrackStore.getRepoTracksMeta(source.id).then(function (meta) {
       var headers = { 'Accept': 'application/vnd.github+json' };
-      if (meta && meta.etag) headers['If-None-Match'] = meta.etag;
+      // Skip the conditional request when the stored index predates the current
+      // indexing logic — a 304 would keep the stale index; we want a full rebuild.
+      if (meta && meta.etag && meta.indexVersion === INDEX_VERSION) headers['If-None-Match'] = meta.etag;
       return fetch(treeApiUrl(parsed), { cache: 'no-cache', headers: headers });
     }).then(function (res) {
       if (res.status === 304) return { unchanged: true };
@@ -260,7 +267,7 @@
       }
 
       var index = buildIndex(paths);
-      return SpeedTrackStore.setRepoIndex(source.id, index, { syncedAt: Date.now(), etag: tree.etag })
+      return SpeedTrackStore.setRepoIndex(source.id, index, { syncedAt: Date.now(), etag: tree.etag, indexVersion: INDEX_VERSION })
         .then(function () { return { unchanged: false, count: paths.length, notices: notices }; });
     });
   }
