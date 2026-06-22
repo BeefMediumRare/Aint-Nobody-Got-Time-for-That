@@ -356,6 +356,26 @@ li.track--local:not(.track--active) {
   bottom: 0;
 }
 
+/* The watch-time payoff under the strip. The figure (mono, like the badges)
+   carries the color; the surrounding words stay quiet. */
+.track-savings {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-top: 7px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.track-savings-time {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.track-savings--saves .track-savings-time { color: var(--ok); }
+.track-savings--adds .track-savings-time { color: var(--speed-3); }
+
 .track-title {
   font-size: 13px;
   font-weight: 600;

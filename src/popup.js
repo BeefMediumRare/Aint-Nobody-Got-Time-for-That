@@ -100,6 +100,42 @@
     return strip;
   }
 
+  // The payoff under the strip: how much watch time this track trims at the user's
+  // current speeds, against the loaded video's length. Leads with the duration (a
+  // mono figure, like the badges), percentage second. Hidden until both the speeds
+  // and the video duration are known (timeSaved needs the duration to size the last
+  // band). A track that only sets normal speed saves nothing — say so plainly.
+  function renderSavings(track) {
+    if (!speedLevels) return null;
+    var saved = SpeedTrack.timeSaved(track, speedLevels, currentDuration);
+    if (saved == null) return null;
+
+    var row = document.createElement('div');
+    row.className = 'track-savings';
+
+    if (saved < 1 && saved > -1) {
+      row.textContent = 'No time saved';
+      return row;
+    }
+
+    var saves = saved >= 1;
+    row.classList.add(saves ? 'track-savings--saves' : 'track-savings--adds');
+    var pct = Math.round(Math.abs(saved) / currentDuration * 100);
+
+    var lead = document.createElement('span');
+    lead.textContent = saves ? 'Saves' : 'Adds';
+    var time = document.createElement('span');
+    time.className = 'track-savings-time';
+    time.textContent = SpeedTrack.formatTimestamp(Math.abs(saved));
+    var pctEl = document.createElement('span');
+    pctEl.textContent = '· ' + pct + '%';
+
+    row.appendChild(lead);
+    row.appendChild(time);
+    row.appendChild(pctEl);
+    return row;
+  }
+
   // ---- Render the matching tracks -------------------------------------------
 
   function renderTracks() {
@@ -219,6 +255,8 @@
     }
 
     li.appendChild(renderStrip(track));
+    var savings = renderSavings(track);
+    if (savings) li.appendChild(savings);
 
     var actions = document.createElement('div');
     actions.className = 'track-actions';
@@ -481,7 +519,13 @@
   }
 
   SpeedTrackStore.ensureSeeded();
-  SpeedTrackStore.getSpeedLevels().then(function (m) { speedLevels = m; });
+  // If the speeds land after the first render (they load in parallel with the tab
+  // round-trips), re-render so the savings figures appear. Usually they're ready
+  // first and this is a no-op.
+  SpeedTrackStore.getSpeedLevels().then(function (m) {
+    speedLevels = m;
+    if (currentTracks.length) renderTracks();
+  });
   SpeedTrackStore.getAutoApply().then(function (on) { autoApplyToggle.checked = on; });
 
   activeTab().then(function (tab) {

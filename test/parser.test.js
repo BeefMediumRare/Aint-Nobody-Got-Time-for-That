@@ -1,6 +1,6 @@
 // Minimal test runner — `node test/parser.test.js`. Exits non-zero on failure.
 const { parseTrack, rateAt, parseTimestamp, formatTimestamp, formatTrack, mergeCue,
-  slugifyTitle, cuesToTrack, trackToCues, trackToSegments, validateTrack, SCHEMA_VERSION, SPEED_LEVELS } = require('../src/parser.js');
+  slugifyTitle, cuesToTrack, trackToCues, trackToSegments, timeSaved, validateTrack, SCHEMA_VERSION, SPEED_LEVELS } = require('../src/parser.js');
 
 let failed = 0;
 function eq(label, got, want) {
@@ -164,6 +164,24 @@ eq('validate missing id+title null', validateTrack({ cues: [] }).track, null);
 eq('validate bad cue ts', validateTrack({ youtubeVideoId: 'v', title: 't', cues: [{ timestamp: 'x', speed: '1' }] }).errors.length, 1);
 eq('validate unknown code', validateTrack({ youtubeVideoId: 'v', title: 't', cues: [{ timestamp: '0:00', speed: '7' }] }).errors.length, 1);
 eq('validate missing cues array', validateTrack({ youtubeVideoId: 'v', title: 't' }).errors.length, 1);
+
+// timeSaved: watch time trimmed at the user's speeds, against a known duration.
+const sv = (cues, dur, levels) => timeSaved({ cues }, levels, dur);
+// one 2x band over the whole video saves half
+eq('saved 2x whole', sv([{ timestamp: '0:00', speed: '2' }], 100), 50);
+// a skip is seeked past, saving the whole stretch (not just rate-scaled)
+eq('saved skip to end', sv([{ timestamp: '0:00', speed: '4' }], 100), 100);
+// the stretch before the first cue plays at 1x and contributes nothing
+eq('saved head at 1x', sv([{ timestamp: '0:20', speed: '2' }], 120), 50);
+// mixed: 2x for the first minute (saves 30), then skip the rest (saves 60)
+eq('saved mixed', sv([{ timestamp: '0:00', speed: '2' }, { timestamp: '1:00', speed: '4' }], 120), 90);
+// a sub-1x speed makes the video longer -> negative ("adds time")
+eq('saved negative slow', sv([{ timestamp: '0:00', speed: '1' }], 100, { 1: 0.5 }), -100);
+// no cues -> nothing saved
+eq('saved no cues', sv([], 100), 0);
+// duration unknown -> null (the last band can't be sized)
+eq('saved no duration', sv([{ timestamp: '0:00', speed: '2' }], undefined), null);
+eq('saved zero duration', sv([{ timestamp: '0:00', speed: '2' }], 0), null);
 
 console.log(failed ? `\n${failed} failed` : '\nAll passed');
 process.exit(failed ? 1 : 0);

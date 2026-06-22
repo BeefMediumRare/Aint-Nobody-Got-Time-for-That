@@ -184,6 +184,31 @@
     return segments;
   }
 
+  // Estimate the watch time a track trims at the given speed levels, against a
+  // known video duration. Mirrors the playback engine: each cue opens a band that
+  // runs to the next cue (the last to `duration`), playing at the cue's rate —
+  // except a skip (code 4), which is seeked past, saving the whole band. The
+  // stretch before the first cue plays untouched at 1x; it isn't a segment, so it
+  // never enters the sum. Returns seconds saved (negative when a sub-1x speed makes
+  // the video longer), or null when the duration isn't known yet — the last band
+  // can't be sized without it.
+  var SKIP_CODE = 4; // mirror of content.js / the "4 = skip" convention
+  function timeSaved(track, speedLevels, duration) {
+    if (!(duration > 0) || !isFinite(duration)) return null;
+    var segments = trackToSegments(track, speedLevels);
+    var saved = 0;
+    for (var i = 0; i < segments.length; i++) {
+      var start = Math.min(Math.max(segments[i].start, 0), duration);
+      var nextStart = (i + 1 < segments.length) ? segments[i + 1].start : duration;
+      var end = Math.min(Math.max(nextStart, 0), duration);
+      var len = end - start;
+      if (len <= 0) continue;
+      if (segments[i].code === SKIP_CODE) saved += len;            // seeked past entirely
+      else if (segments[i].rate > 0) saved += len * (1 - 1 / segments[i].rate);
+    }
+    return saved;
+  }
+
   // Turn a Track's cues back into recorder cues [{t, code}] so a saved track can
   // be reopened for editing. Inverse of cuesToTrack; bad cues are skipped.
   function trackToCues(track) {
@@ -266,6 +291,7 @@
     cuesToTrack: cuesToTrack,
     trackToCues: trackToCues,
     trackToSegments: trackToSegments,
+    timeSaved: timeSaved,
     validateTrack: validateTrack,
     SCHEMA_VERSION: SCHEMA_VERSION,
     TRACK_EXT: TRACK_EXT,
